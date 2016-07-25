@@ -5,8 +5,14 @@
  */
 package com.datis.consumer.region;
 
+import com.datis.irc.entity.RegionCount;
+import com.datis.irc.entity.WindowedPageViewByRegion;
+import com.datis.irc.pojo.JsonPOJODeserializer;
+import com.datis.irc.pojo.RegionCountDeserializer;
+import com.datis.irc.pojo.WindowDeserializer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -15,12 +21,22 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.Serializer;
 
 /**
+ * start step3 topic that save windowing class POJO
  *
  * @author jeus
  */
-public class ConsumerRegion extends Thread {
+public class ConsumerRegionWindowing extends Thread {
+
+  com.datis.irc.pojo.RegionCountDeserializer regCountDeserializer = new RegionCountDeserializer();
+  com.datis.irc.pojo.WindowDeserializer wPageViewByRegionDeserializer = new WindowDeserializer();
+
+    
 
     private boolean logOn = true;
     List<TopicPartition> tp = new ArrayList<>(4);
@@ -30,12 +46,12 @@ public class ConsumerRegion extends Thread {
     static Properties pro = new Properties();
     String topic = "";
 
-    public ConsumerRegion() {
+    public ConsumerRegionWindowing() {
     }
 
-    public ConsumerRegion(String topic, Properties props, boolean logOn) {
+    public ConsumerRegionWindowing(String topic, Properties props, boolean logOn) {
         this.logOn = logOn;
-        consumer = new KafkaConsumer(props);
+        consumer = new KafkaConsumer(props);//,wPageViewByRegionDeserializer,regionCountDeserializer);
         this.topic = topic;
         tp.add(new TopicPartition(topic, 0));
 
@@ -44,23 +60,26 @@ public class ConsumerRegion extends Thread {
     @Override
     public void run() {
         consumer.subscribe(Collections.singleton(topic));//subscribe all topics for poll
+        System.out.println("Change It Is work ---------------------*********");
 
-        System.out.println("Consumer Have to poll Consumer position:========================");
+//        consumer.poll(100);
 
-        consumer.poll(100);
-
-        consumer.seek(tp.get(0), 1);
+//        consumer.seek(tp.get(0), 100);
         int position = 8000;
         while (true) {
 
-            ConsumerRecords<String, Long> records = consumer.poll(1000);
+            ConsumerRecords<WindowedPageViewByRegion, RegionCount> records = consumer.poll(1000);
+//            ConsumerRecords<String, String> records = consumer.poll(1000);
             System.out.println(logPosition());
 
-            for (ConsumerRecord<String, Long> rec : records) {
-                System.out.println("---------------------------------------");
+//            for (ConsumerRecord<String , String> rec : records) {
+            for (ConsumerRecord<WindowedPageViewByRegion, RegionCount>  rec : records) {
+                System.out.println("-------------------******#--------------------");
                 if (logOn) {
-                    System.out.println("(Key:" + rec.key() + ")    (Value:" + rec.value() + ")" + rec.offset());
-                    System.out.println("---------------------------------------");
+                    Date dt = new Date(rec.key().windowStart );
+                    System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + ")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
+//                    System.out.println("(Key region:" + rec.key() + ")    (Value reg:" + rec.value()+ ")" + rec.offset());
+                    System.out.println("------------------*****---------------------");
                 }
                 partitionBenchMark(rec);
             }
@@ -108,10 +127,11 @@ public class ConsumerRegion extends Thread {
     }
 
     public static void main(String[] arg) {
+
         Properties props = new Properties();
 //        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.17.0.11:2181");//172.17.0.8:2181,172.17.0.9:2181,172.17.0.10:2181");
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.17.0.13:9092");//172.17.0.8:2181,172.17.0.9:2181,172.17.0.10:2181");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "TestMikonam1");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "windowing");
 //        props.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, (4000 * 10000) + "");//change this for increase and decrease packet fethe by consumer every message is 100Byte
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
@@ -120,12 +140,11 @@ public class ConsumerRegion extends Thread {
 //        props.put(ConsumerConfig.AUTO_OFFSET_RESET_DOC, "latest");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                //                "org.apache.kafka.common.serialization.StringDeserializer");
-                "org.apache.kafka.common.serialization.LongDeserializer");
+                "com.datis.irc.pojo.WindowDeserializer");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, 
+                "com.datis.irc.pojo.RegionCountDeserializer");
 //        ConsumerRegion consumer1 = new ConsumerRegion("step2test1", props, true);
-        ConsumerRegion consumer1 = new ConsumerRegion("step2", props, true);
+        ConsumerRegionWindowing consumer1 = new ConsumerRegionWindowing("step3", props, true);
         consumer1.start();
     }
 }
