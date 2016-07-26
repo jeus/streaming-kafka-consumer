@@ -53,10 +53,10 @@ public class ConsumerRegion extends Thread {
         int position = 8000;
         while (true) {
 
-            ConsumerRecords<String, Long> records = consumer.poll(1000);
+            ConsumerRecords<Long, String> records = consumer.poll(1000);
             System.out.println(logPosition());
 
-            for (ConsumerRecord<String, Long> rec : records) {
+            for (ConsumerRecord<Long, String> rec : records) {
                 System.out.println("---------------------------------------");
                 if (logOn) {
                     System.out.println("(Key:" + rec.key() + ")    (Value:" + rec.value() + ")" + rec.offset());
@@ -120,12 +120,12 @@ public class ConsumerRegion extends Thread {
 //        props.put(ConsumerConfig.AUTO_OFFSET_RESET_DOC, "latest");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.StringDeserializer");
+                "org.apache.kafka.common.serialization.LongDeserializer");
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 //                "org.apache.kafka.common.serialization.StringDeserializer");
-                "org.apache.kafka.common.serialization.LongDeserializer");
+                "org.apache.kafka.common.serialization.StringDeserializer");
 //        ConsumerRegion consumer1 = new ConsumerRegion("step2test1", props, true);
-        ConsumerRegion consumer1 = new ConsumerRegion("step2", props, true);
+        ConsumerRegion consumer1 = new ConsumerRegion("step1", props, true);
         consumer1.start();
     }
 }

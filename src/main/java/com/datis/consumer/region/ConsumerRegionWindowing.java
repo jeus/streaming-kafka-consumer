@@ -62,9 +62,9 @@ public class ConsumerRegionWindowing extends Thread {
         consumer.subscribe(Collections.singleton(topic));//subscribe all topics for poll
         System.out.println("Change It Is work ---------------------*********");
 
-//        consumer.poll(100);
+        consumer.poll(100);
 
-//        consumer.seek(tp.get(0), 100);
+        consumer.seek(tp.get(0), 1);
         int position = 8000;
         while (true) {
 
@@ -77,7 +77,8 @@ public class ConsumerRegionWindowing extends Thread {
                 System.out.println("-------------------******#--------------------");
                 if (logOn) {
                     Date dt = new Date(rec.key().windowStart );
-                    System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + ")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
+                    Date dt1 = new Date();
+                    System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + "||||"+dt1.toString()+")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
 //                    System.out.println("(Key region:" + rec.key() + ")    (Value reg:" + rec.value()+ ")" + rec.offset());
                     System.out.println("------------------*****---------------------");
                 }
