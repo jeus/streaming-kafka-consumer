@@ -33,10 +33,8 @@ import org.apache.kafka.common.serialization.Serializer;
  */
 public class ConsumerRegionWindowing extends Thread {
 
-  com.datis.irc.pojo.RegionCountDeserializer regCountDeserializer = new RegionCountDeserializer();
-  com.datis.irc.pojo.WindowDeserializer wPageViewByRegionDeserializer = new WindowDeserializer();
-
-    
+    com.datis.irc.pojo.RegionCountDeserializer regCountDeserializer = new RegionCountDeserializer();
+    com.datis.irc.pojo.WindowDeserializer wPageViewByRegionDeserializer = new WindowDeserializer();
 
     private boolean logOn = true;
     List<TopicPartition> tp = new ArrayList<>(4);
@@ -73,20 +71,25 @@ public class ConsumerRegionWindowing extends Thread {
             System.out.println(logPosition());
 
 //            for (ConsumerRecord<String , String> rec : records) {
-            for (ConsumerRecord<WindowedPageViewByRegion, RegionCount>  rec : records) {
-                System.out.println("-------------------******#--------------------");
-                if (logOn) {
-                    Date dt = new Date(rec.key().windowStart );
+            if (logOn) {
+                for (ConsumerRecord<WindowedPageViewByRegion, RegionCount> rec : records) {
+
+                    Date dt = new Date(rec.key().windowStart);
                     Date dt1 = new Date();
-                    System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + "||||"+dt1.toString()+")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
+                    System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + "||||" + dt1.toString() + ")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
 //                    System.out.println("(Key region:" + rec.key() + ")    (Value reg:" + rec.value()+ ")" + rec.offset());
                     System.out.println("------------------*****---------------------");
+                    partitionBenchMark(rec);
                 }
-                partitionBenchMark(rec);
             }
+            if (!logOn) {
+                for (ConsumerRecord<WindowedPageViewByRegion, RegionCount> rec : records) {
+                    partitionBenchMark(rec);
+                }
+            }
+
         }
 
-//        }
     }
 
     public void loger() {
@@ -142,7 +145,7 @@ public class ConsumerRegionWindowing extends Thread {
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 "com.datis.irc.pojo.WindowDeserializer");
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, 
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 "com.datis.irc.pojo.RegionCountDeserializer");
 //        ConsumerRegion consumer1 = new ConsumerRegion("step2test1", props, true);
         ConsumerRegionWindowing consumer1 = new ConsumerRegionWindowing("step3", props, true);
