@@ -40,6 +40,7 @@ public class ConsumerRegionWindowing extends Thread {
     List<TopicPartition> tp = new ArrayList<>(4);
     private static int[] partitionNumb = new int[4];
     private static long[][] minMaxOffset = new long[4][2];
+    static int messageNumber = 0;
     KafkaConsumer consumer;
     static Properties pro = new Properties();
     String topic = "";
@@ -71,25 +72,29 @@ public class ConsumerRegionWindowing extends Thread {
             System.out.println(logPosition());
 
 //            for (ConsumerRecord<String , String> rec : records) {
-            if (logOn) {
-                for (ConsumerRecord<WindowedPageViewByRegion, RegionCount> rec : records) {
+            if (records.count() != 0) {
+                messageNumber += records.count();
+                if (logOn) {
+                    for (ConsumerRecord<WindowedPageViewByRegion, RegionCount> rec : records) {
 
-                    Date dt = new Date(rec.key().windowStart);
-                    Date dt1 = new Date();
-                    System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + "||||" + dt1.toString() + ")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
+                        Date dt = new Date(rec.key().windowStart);
+                        Date dt1 = new Date();
+                        System.out.println("(Key region:" + rec.key().region + "  Key windowStart:" + dt.toString() + "||||" + dt1.toString() + ")    (Value reg:" + rec.value().region + "  Value  count:" + rec.value().count + ")" + rec.offset());
 //                    System.out.println("(Key region:" + rec.key() + ")    (Value reg:" + rec.value()+ ")" + rec.offset());
-                    System.out.println("------------------*****---------------------");
-                    partitionBenchMark(rec);
+                        System.out.println("------------------*****---------------------");
+                        partitionBenchMark(rec);
+                    }
                 }
-            }
-            if (!logOn) {
-                for (ConsumerRecord<WindowedPageViewByRegion, RegionCount> rec : records) {
-                    partitionBenchMark(rec);
+                if (!logOn) {
+                    for (ConsumerRecord<WindowedPageViewByRegion, RegionCount> rec : records) {
+                        partitionBenchMark(rec);
+                    }
                 }
+                System.out.println("☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂");
+                System.out.println("---------------" + messageNumber + "------------------");
+                System.out.println("☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂");
             }
-
         }
-
     }
 
     public void loger() {
